@@ -1,35 +1,23 @@
 var express = require('express');
+var bodyParser = require('body-parser');
 var app = express();
 var PORT = process.env.PORT || 3000;
-var todos = [{
-	id: 1,
-	description: 'Meet mom for lunch.',
-	completed: false
-}, {
-	id: 2,
-	description: 'Go to market.',
-	completed: false
-}, {
-	id: 3,
-	description: 'Learn node.js.',
-	completed: true
-}];
+var todos = [];
+var todoNextId = 1;
 
-app.get('/', function (req, res, next) {
+app.use(bodyParser.json());
+
+app.get('/', function (req, res) {
 	res.send('Todo API Root');
 });
 
-//GET /todos
-app.get('/todos', function (req, res, next) {
+app.get('/todos', function (req, res) {
 	res.json(todos);
 });
 
-//GET /todos/:id
 app.get('/todos/:id', function (req, res) {
 	var todoid = req.params.id;
 	var output = '';
-
-	//res.send('Asking for todo with id of ' + todoid);
 
 	var matchedTodo;
 
@@ -40,22 +28,27 @@ app.get('/todos/:id', function (req, res) {
 		};
 	});
 
-/*
-	for (var i = 0; i < todos.length; ++i) {
-		output = output + ' ' + todos[i].id;
-		if (todos[i].id.toString() === todoid) {
-			matchedTodo = todos[i];
-		}
-	}
-*/
-
-	//res.send(output);
-
 	if (typeof matchedTodo === 'undefined') {
 		res.status(404).send();
 	} else {
 		res.json(matchedTodo);
 	}
+});
+
+app.post('/todos', function (req, res)  {
+	var body = req.body;
+
+	var newItem = {
+		id: todoNextId,
+		description: body.description,
+		completed: false
+	};
+
+	todos.push(newItem);
+
+	todoNextId++;
+
+	res.json(todos);
 });
 
 app.listen(PORT, function() {
