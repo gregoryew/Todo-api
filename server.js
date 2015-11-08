@@ -1,5 +1,6 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+var _ = require('underscore');
 var app = express();
 var PORT = process.env.PORT || 3000;
 var todos = [];
@@ -16,37 +17,31 @@ app.get('/todos', function (req, res) {
 });
 
 app.get('/todos/:id', function (req, res) {
-	var todoid = req.params.id;
-	var output = '';
+	var todoid = parseInt(req.params.id);
 
-	var matchedTodo;
+	var matchedTodo = _.findWhere(todos, {id: todoid});
 
-	todos.forEach(function (todo) {
-		output += output + ' ' + todo.id;
-		if (todo.id.toString() === todoid) {
-			matchedTodo = todo;
-		};
-	});
-
-	if (typeof matchedTodo === 'undefined') {
-		res.status(404).send();
-	} else {
+	if (matchedTodo) {
 		res.json(matchedTodo);
+	} else {
+		res.status(404).send();
 	}
 });
 
 app.post('/todos', function (req, res)  {
 	var body = req.body;
 
-	var newItem = {
-		id: todoNextId,
-		description: body.description,
-		completed: false
-	};
+	body = _.pick(body, 'description', 'completed');
 
-	todos.push(newItem);
+	if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
+		return res.status(400).send();
+	}
 
-	todoNextId++;
+	body.description = body.description.trim();
+
+	body.id = todoNextId++;
+
+	todos.push(body);
 
 	res.json(todos);
 });
